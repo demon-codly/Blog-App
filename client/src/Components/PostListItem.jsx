@@ -5,19 +5,20 @@ import { format } from "timeago.js"
 
 const PostListItem = ({post}) => {
 
+
     const isFullUrl = post.img?.startsWith("http");
 
   return (
     <div className='flex flex-col xl:flex-row gap-8 mb-12'>
         {post.img &&
             <div className='md:hidden xl:block xl:w-1/3'>
-                <Image src={post.img && post.img.length > 3 ? post.img : "/postImg.jpeg"} isFullUrl={isFullUrl}  className="rounded-2xl object-cover" w={735} />
+                <Image src={post.img} isFullUrl={isFullUrl}  className="rounded-2xl object-cover" w={735} />
             </div>
         }
         
         {/* details */}
         <div className='flex flex-col gap-4 xl:w-2/3'>
-            <Link to="/test" className="text-4xl font-semibold">
+            <Link to={`/${post.slug}`} className="text-4xl font-semibold">
                 {post.title}
             </Link>
             <div className='flex items-center gap-2 text-gray-400 text-sm'>
