@@ -1,5 +1,5 @@
 import { useUser, useAuth } from "@clerk/clerk-react"
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import axios from "axios"
 import {toast} from 'react-toastify' 
 import { useNavigate } from "react-router-dom"
@@ -43,14 +43,44 @@ const PostMenuActions = ({post}) => {
         },
     })
 
+    const queryClient = useQueryClient()
+    
+    const saveMutation = useMutation({
+        mutationFn: async () => {
+            const token = await getToken();
+            return axios.patch(`${import.meta.env.VITE_API_URL}/users/save`,{
+                postId: post._id,
+            },{
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            })
+        },
+        onSuccess:()=>{
+            queryClient.invalidateQueries({queryKey: ["savedPosts"]})
+        },
+        onError: (error) => {
+            toast.error(error.response.data);
+        },
+    })
+
+
+
     const handleDelete = () => {
         deleteMutation.mutate();
+    }
+
+    const handleSave = () => {
+        if(!user){
+            return navigate("/login")
+        }
+        saveMutation.mutate();
     }
 
     return (
         <div>
             <h1 className='mt-8 mb-4 text-sm font-medium'>Action</h1>
-            {isPending ? "Loading..." : error ? "Saved post fetching failed!" : <div className='flex items-center gap-2 py-2 text-sm cursor-pointer'>
+            {isPending ? "Loading..." : error ? "Saved post fetching failed!" : <div className='flex items-center gap-2 py-2 text-sm cursor-pointer' onClick={handleSave}>
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 48 48"
@@ -63,10 +93,11 @@ const PostMenuActions = ({post}) => {
                         strokeWidth="2"
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        fill={isSaved ? "black" : "none"}
+                        fill={saveMutation.isPending ? isSaved ? "none" : "black" : isSaved ? "black" : "none"}
                     />
                 </svg>
                 <span>Save this Post</span>
+                {saveMutation.isPending && <span className="text-xs">(in progress)</span>}
             </div>}
             {user && (post.user.username === user.username) && <div className='flex items-center gap-2 py-2 text-sm cursor-pointer' onClick={handleDelete}>
                 <svg
